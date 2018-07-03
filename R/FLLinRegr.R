@@ -1504,69 +1504,71 @@ prepareData.character <- prepareData.formula
                                         #parentObject <- deparse(substitute(object))
     parentObject <- unlist(strsplit(unlist(strsplit(as.character(sys.call()),
                             "(",fixed=T))[2],",",fixed=T))[1]
-    if(property=="coefficients"){
-        coefficientsvector <- coefficients(object)
-        assign(parentObject,object,envir=parent.frame())
-        return(coefficientsvector)
+    if(property=="coefficients")
+    {
+      coefficientsvector <- coefficients(object)
+      assign(parentObject, object, envir = parent.frame())
+      return(coefficientsvector)
     }
-    else if (property=="residuals"){
-        residualsvector <- residuals(object)
-        assign(parentObject,object,envir=parent.frame())
-        return(residualsvector)
+    else if (property=="residuals")
+    {
+      residualsvector <- residuals(object)
+      assign(parentObject, object, envir = parent.frame())
+      return(residualsvector)
     }
     else if(property=="fitted.values")
     {
-        fitvector <- fitted.values.FLGAM(object)
-        assign(parentObject,object,envir=parent.frame())
-        return(fitvector)
+      fitvector <- fitted.values.FLGAM(object)
+      assign(parentObject, object, envir = parent.frame())
+      return(fitvector)
     }
     else if(property=="FLCoeffStdErr")
     {
-        coeffVector <- coefficients(object)
-        assign(parentObject,object,envir=parent.frame())
-        return(object@results[["FLCoeffStdErr"]])
+      coeffVector <- coefficients(object)
+      assign(parentObject, object, envir = parent.frame())
+      return(object@results[["FLCoeffStdErr"]])
     }
     else if(property=="FLCoeffTStat")
     {
-        coeffVector <- coefficients(object)
-        assign(parentObject,object,envir=parent.frame())
-        return(object@results[["FLCoeffTStat"]])
+      coeffVector <- coefficients(object)
+      assign(parentObject, object, envir = parent.frame())
+      return(object@results[["FLCoeffTStat"]])
     }
     else if(property=="FLCoeffPValue")
     {
-        coeffVector <- coefficients(object)
-        assign(parentObject,object,envir=parent.frame())
-        return(object@results[["FLCoeffPValue"]])
+      coeffVector <- coefficients(object)
+      assign(parentObject, object, envir = parent.frame())
+      return(object@results[["FLCoeffPValue"]])
     }
     else if(property=="FLCoeffNonZeroDensity")
     {
-        coeffVector <- coefficients(object)
-        assign(parentObject,object,envir=parent.frame())
-        return(object@results[["FLCoeffNonZeroDensity"]])
+      coeffVector <- coefficients(object)
+      assign(parentObject, object, envir = parent.frame())
+      return(object@results[["FLCoeffNonZeroDensity"]])
     }
     else if(property=="FLCoeffCorrelWithRes")
     {
-        coeffVector <- coefficients(object)
-        assign(parentObject,object,envir=parent.frame())
-        return(object@results[["FLCoeffCorrelWithRes"]])
+      coeffVector <- coefficients(object)
+      assign(parentObject, object, envir = parent.frame())
+      return(object@results[["FLCoeffCorrelWithRes"]])
     }
     else if(property == "s")
     {
-        if(!is.null(object@results[["s"]]))
-        {
-            return(object@results[["s"]])
-        }
-        str <- paste0("SELECT * FROM ",object@vfcalls["statstablename"],
-                        " a WHERE a.AnalysisID = '",object@AnalysisID,"'")
-        t <- sqlQuery(connection, str)
-        val <- t[t$Notation == "Mad_S",3]
-        object@results <- c(object@results, list(s = val))
-        assign(parentObject,object,envir=parent.frame())
-        return(val)
-        }
+      if (!is.null(object@results[["s"]]))
+      {
+        return(object@results[["s"]])
+      }
+      str <-paste0("SELECT * FROM ", object@vfcalls["statstablename"],
+                   " a WHERE a.AnalysisID = '", object@AnalysisID, "'")
+      t <- sqlQuery(connection, str)
+      val <- t[t$Notation == "Mad_S", 3]
+      object@results <- c(object@results, list(s = val))
+      assign(parentObject, object, envir = parent.frame())
+      return(val)
+    }
     else if(property=="call")
     {
-        return(object@results[["call"]])
+      return(object@results[["call"]])
     }
     else if(property=="FLLinRegrStats")
     {
@@ -1590,12 +1592,12 @@ prepareData.character <- prepareData.formula
             return(NULL)
         else
         {
-            statsdataframe <- object$FLLinRegrStats
-            colnames(statsdataframe) <- toupper(colnames(statsdataframe))
-            dfResidualVector <- statsdataframe[["DFRESIDUAL"]]
-            object@results <- c(object@results,list(df.residual=dfResidualVector))
-            assign(parentObject,object,envir=parent.frame())
-            return(dfResidualVector)
+          statsdataframe <- object$FLLinRegrStats
+          colnames(statsdataframe) <- toupper(colnames(statsdataframe))
+          dfResidualVector <- statsdataframe[["DFRESIDUAL"]]
+          object@results <- c(object@results, list(df.residual = dfResidualVector))
+          assign(parentObject, object, envir = parent.frame())
+          return(dfResidualVector)
         }
     }
     else if(property=="model")
@@ -1698,29 +1700,36 @@ prepareData.character <- prepareData.formula
     }
     else if(property=="qr" || property=="rank")
     {
+      if (object@vfcalls[["functionName"]] == "FLLinRegrSP")
+      {
+        stop('Property "qr/rank" not supported for MD/MDS objects')
+      }
+      else
+      {
         if(!is.null(object@results[["qr"]]))
         {
-            if(property=="qr")
-                return(object@results[["qr"]])
-            else if(property=="rank")
-                return(object@results[["qr"]]$rank)
+          if(property=="qr")
+            return(object@results[["qr"]])
+          else if(property=="rank")
+            return(object@results[["qr"]]$rank)
         }
         else
         {
-            modelmatrix <- object$x
-            if(nrow(modelmatrix)>700
-               || ncol(modelmatrix)>700)
-                modelmatrix <- as.matrix(modelmatrix)
-                                        # modelmatrix <- as.matrix(object$x)
-                                        # qrList <- base::qr(modelmatrix)
-            qrList <- qr(modelmatrix)
-            vrank <- qrList$rank
-            object@results <- c(object@results,list(qr=qrList))
-            assign(parentObject,object,envir=parent.frame())
-            if(property=="qr")
-                return(qrList)
-            else if(property=="rank") return(vrank)
+          modelmatrix <- object$x
+          if(nrow(modelmatrix)>700
+             || ncol(modelmatrix)>700)
+            modelmatrix <- as.matrix(modelmatrix)
+          # modelmatrix <- as.matrix(object$x)
+          # qrList <- base::qr(modelmatrix)
+          qrList <- qr(modelmatrix)
+          vrank <- qrList$rank
+          object@results <- c(object@results,list(qr=qrList))
+          assign(parentObject,object,envir=parent.frame())
+          if(property=="qr")
+            return(qrList)
+          else if(property=="rank") return(vrank)
         }
+      }
     }
     else if(property=="terms")
     {
@@ -1771,7 +1780,12 @@ prepareData.character <- prepareData.formula
 
     else if(property == "regrstats")
     {
-      `$.FLLinRegrMD`(object, property = "regrstats")
+      if(object@vfcalls[["functionName"]] == "FLLinRegrSP") {
+        `$.FLLinRegrMD`(object, property = "regrstats")
+      }
+      else {
+        stop("regrstats property not available for FLTable objects")
+      }
     }
 
     else if(property=="anova") stop("This feature is not available yet.")
@@ -1907,25 +1921,25 @@ prepareData.character <- prepareData.formula
 
             yvector <- c()
             if (object@vfcalls[["functionName"]] == "FLLinRegrSP") {
-				for (i in 1:length(newdata@Dimnames[[1]][[1]])) {
-					sqlstr1 <- paste(sqlstr, " WHERE vectorIdColumn = ", i, sep = "")
+              for (i in 1:length(newdata@Dimnames[[1]][[1]])) {
+                sqlstr1 <- paste(sqlstr, " WHERE vectorIdColumn = ", i, sep = "")
 
-					tblfunqueryobj <- new("FLTableFunctionQuery",
-					                  connectionName = getFLConnectionName(),
-					                  variables = list(obs_id_colname = "vectorIndexColumn",
-					                                   cell_val_colname = "vectorValueColumn"),
-					                  whereconditions = "",
-					                  order = "",
-					                  SQLquery = sqlstr1)
+                tblfunqueryobj <- new("FLTableFunctionQuery",
+                                      connectionName = getFLConnectionName(),
+                                      variables = list(obs_id_colname = "vectorIndexColumn",
+                                                       cell_val_colname = "vectorValueColumn"),
+                                      whereconditions = "",
+                                      order = "",
+                                      SQLquery = sqlstr1)
 
-					newflv <- newFLVector(select = tblfunqueryobj,
-					                  Dimnames = list(rownames(newdata@Dimnames[[2]][i]),
-					                                  "vectorValueColumn"),
-					                  dims = as.integer(c(newdata@dims[[2]][i], 1)),
-					                  isDeep = FALSE)
-					yvector <- c(yvector, newflv)
-				}
-		  	}
+                newflv <- newFLVector(select = tblfunqueryobj,
+                                      Dimnames = list(rownames(newdata@Dimnames[[2]][i]),
+                                                      "vectorValueColumn"),
+                                      dims = as.integer(c(newdata@dims[[2]][i], 1)),
+                                      isDeep = FALSE)
+                yvector <- c(yvector, newflv)
+              }
+            }
 
             tblfunqueryobj <- new("FLTableFunctionQuery",
                                   connectionName = getFLConnectionName(),
@@ -1947,7 +1961,7 @@ prepareData.character <- prepareData.formula
     }
     else if(property=="qr" || property=="rank")
     {
-      warning('Property "qr/rank" not supported for MD/MDS objects')
+      stop('Property "qr/rank" not supported for MD/MDS objects')
       return()
     }
     else if(property=="terms")
