@@ -1614,7 +1614,7 @@ prepareData.character <- prepareData.formula
     {
       if(object@vfcalls[["functionName"]] == "FLLinRegrSP")
       {
-        stop("model property not supported for MDS")
+        warning("model property not supported for MDS")
       }
       else
       {
@@ -1637,7 +1637,7 @@ prepareData.character <- prepareData.formula
     {
       if(object@vfcalls[["functionName"]] == "FLLinRegrSP")
       {
-        stop("x not supported for MD/MDS functions")
+        warning("x not supported for MD/MDS functions")
       }
       else
       {
@@ -1724,7 +1724,7 @@ prepareData.character <- prepareData.formula
     {
       if (object@vfcalls[["functionName"]] == "FLLinRegrSP")
       {
-        stop('Property "qr/rank" not supported for MD/MDS objects')
+        warning('Property "qr/rank" not supported for MD/MDS objects')
       }
       else
       {
@@ -1806,13 +1806,13 @@ prepareData.character <- prepareData.formula
         `$.FLLinRegrMD`(object, property = "regrstats")
       }
       else {
-        stop("regrstats property not available for FLTable objects")
+        warning("regrstats property not available for FLTable objects")
       }
     }
 
-    else if(property=="anova") stop("This feature is not available yet.")
+    else if(property=="anova") warning("This feature is not available yet.")
 
-    else stop("That's not a valid property \n ")
+    else warning("That's not a valid property \n ")
 }
 
 #' @export
@@ -1914,76 +1914,52 @@ prepareData.character <- prepareData.formula
     }
     else if(property=="y")
     {
-        ##This is safer from simple subsetting of
-        ## WideTable as whereConditions may exist
-        if(!is.null(object@results[["y"]]))
-            return(object@results[["y"]])
-        else
-        {
-            vtablename <- getTableNameSlot(object@deeptable)
-            vgroupid <- getGroupIdSQLExpression(object@deeptable)
-            obs_id_colname <- getObsIdSQLExpression(object@deeptable)
-            var_id_colname <- getVarIdSQLExpression(object@deeptable)
-            cell_val_colname <- getValueSQLExpression(object@deeptable)
+      ##This is safer from simple subsetting of
+      ## WideTable as whereConditions may exist
+      if(!is.null(object@results[["y"]]))
+        return(object@results[["y"]])
+      else
+      {
+        vgroupid <- getGroupIdSQLExpression(object@deeptable)
+        vtablename <- getTableNameSlot(object@deeptable)
+        obs_id_colname <- getObsIdSQLExpression(object@deeptable)
+        var_id_colname <- getVarIdSQLExpression(object@deeptable)
+        cell_val_colname <- getValueSQLExpression(object@deeptable)
 
-            if(object@vfcalls[["functionName"]] == "FLLinRegrSP") {
-              sqlstr <- paste0("SELECT ", vgroupid, " AS vectorIdColumn,\n",
-                               obs_id_colname, " AS vectorIndexColumn,\n",
-                               cell_val_colname, " AS vectorValueColumn\n",
-                               " FROM ", vtablename,
-                               " \nWHERE ", var_id_colname, " = -1 \n")
-            }
-            else {
-              sqlstr <- paste0("SELECT '%insertIDhere%' AS vectorIdColumn,\n",
-                               obs_id_colname, " AS vectorIndexColumn,\n",
-                               cell_val_colname, " AS vectorValueColumn\n",
-                               " FROM ", vtablename,
-                               " \nWHERE ", var_id_colname, " = -1 \n")
-            }
+        yvector <- list()
+        newdata <- object@table
+        for (i in 1:length(newdata@Dimnames[[1]][[1]])) {
+          sqlstr <- paste0("SELECT ", vgroupid, " AS vectorIdColumn,\n",
+                           obs_id_colname, " AS vectorIndexColumn,\n",
+                           cell_val_colname, " AS vectorValueColumn\n",
+                           " FROM ", vtablename,
+                           " \nWHERE ", var_id_colname, " = -1 \n")
 
-            yvector <- c()
-            if (object@vfcalls[["functionName"]] == "FLLinRegrSP") {
-              for (i in 1:length(newdata@Dimnames[[1]][[1]])) {
-                sqlstr1 <- paste(sqlstr, " WHERE vectorIdColumn = ", i, sep = "")
+          tblfunqueryobj <- new("FLTableFunctionQuery",
+                                connectionName = getFLConnectionName(),
+                                variables = list(obs_id_colname = "vectorIndexColumn",
+                                                 cell_val_colname = "vectorValueColumn"),
+                                whereconditions = "",
+                                order = "",
+                                SQLquery = sqlstr)
 
-                tblfunqueryobj <- new("FLTableFunctionQuery",
-                                      connectionName = getFLConnectionName(),
-                                      variables = list(obs_id_colname = "vectorIndexColumn",
-                                                       cell_val_colname = "vectorValueColumn"),
-                                      whereconditions = "",
-                                      order = "",
-                                      SQLquery = sqlstr1)
+          newyvector <- newFLVector(select = tblfunqueryobj,
+                                    Dimnames = list(rownames(newdata@Dimnames[[2]][i]),
+                                                    "vectorValueColumn"),
+                                    dims = as.integer(c(newdata@dims[[2]][i], 1)),
+                                    isDeep = FALSE)
 
-                newflv <- newFLVector(select = tblfunqueryobj,
-                                      Dimnames = list(rownames(newdata@Dimnames[[2]][i]),
-                                                      "vectorValueColumn"),
-                                      dims = as.integer(c(newdata@dims[[2]][i], 1)),
-                                      isDeep = FALSE)
-                yvector <- c(yvector, newflv)
-              }
-            }
-
-            tblfunqueryobj <- new("FLTableFunctionQuery",
-                                  connectionName = getFLConnectionName(),
-                                  variables = list(obs_id_colname = "vectorIndexColumn",
-                                                   cell_val_colname = "vectorValueColumn"),
-                                  whereconditions = "",
-                                  order = "",
-                                  SQLquery = sqlstr)
-
-            yvector <- newFLVector(select = tblfunqueryobj,
-                                   Dimnames = list(object@deeptable@Dimnames[[1]],
-                                                   "vectorValueColumn"),
-                                   dims = as.integer(c(nrow(object@deeptable), 1)),
-                                   isDeep = FALSE)
-            object@results <- c(object@results, list(y = yvector))
-            assign(parentObject, object, envir = parent.frame())
-            return(yvector)
+          yvector <- c(yvector, newyvector)
         }
+
+        object@results <- c(object@results, list(y = yvector))
+        assign(parentObject, object, envir = parent.frame())
+        return(yvector)
+      }
     }
     else if(property=="qr" || property=="rank")
     {
-      stop('Property "qr/rank" not supported for MD/MDS objects')
+      warning('Property "qr/rank" not supported for MD/MDS objects')
       return()
     }
     else if(property=="terms")
@@ -2068,9 +2044,9 @@ prepareData.character <- prepareData.formula
       return(vresList)
     }
 
-    else if(property=="anova") stop("This feature is not available yet.")
+    else if(property=="anova") warning("This feature is not available yet.")
 
-    else stop("That's not a valid property \n ")
+    else warning("That's not a valid property \n ")
 }
 
 setMethod("names", signature("FLRobustRegr"), function(x) c("coefficients",
@@ -2256,7 +2232,7 @@ residuals.FLLinRegr<-function(object)
 #' @export
 residuals.FLLinRegrMD<-function(object)
 {
-    stop("Not supported for FLTableMD objects")
+    warning("Not supported for FLTableMD objects")
 }
 
 #' @export
@@ -2457,7 +2433,7 @@ predict.lmGeneric <- function(object,
                               newdata=object@table,
                               scoreTable="",
                               type="response",...){
-    if(!is.FLTable(newdata) && class(newdata) != "FLpreparedData") stop("scoring allowed on FLTable only")
+    if(!is.FLTable(newdata) && class(newdata) != "FLpreparedData") warning("scoring allowed on FLTable only")
     vfcalls <- object@vfcalls
     if(class(newdata) == "FLpreparedData"){
         newdata <- newdata$deepx

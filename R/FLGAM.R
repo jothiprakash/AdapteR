@@ -543,7 +543,7 @@ coefficients.FLGAM <- function(object)
 fitted.values.FLGAM <- function(object)
 {
   if(object@vfcalls[["functionName"]] == "FLLinRegrMultiDataSet") {
-    stop("Not supported for FLTableMD objects")
+    warning("Not supported for FLTableMD objects")
   }
 	else {
 		if(!is.null(object@results[["fitted.values"]]))

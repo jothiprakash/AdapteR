@@ -69,9 +69,6 @@ lmfitMD$df.residual
 # MD x
 lmfitMD$x
 
-# MD y
-lmfitMD$y
-
 # MD qr
 lmfitMD$qr
 
@@ -114,9 +111,6 @@ lmfitMDS$FLCoeffNonZeroDensity
 # MDS FLCoeffCorrelWithRes
 lmfitMDS$FLCoeffCorrelWithRes
 
-# MDS s
-lmfitMDS$s
-
 # MDS call
 lmfitMDS$call
 
@@ -127,10 +121,7 @@ lmfitMDS$df.residual
 lmfitMDS$model
 
 # MDS x
-lmfitMDS$x # needs working
-
-# MDS y
-lmfitMDS$y
+lmfitMDS$x
 
 # MDS qr and rank
 lmfitMDS$qr
