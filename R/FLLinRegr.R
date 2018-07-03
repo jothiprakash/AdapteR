@@ -1588,20 +1588,36 @@ prepareData.character <- prepareData.formula
     }
     else if(property=="df.residual")
     {
-        if(object@vfcalls["functionName"] == "FLRobustRegr")
-            return(NULL)
-        else
-        {
-          statsdataframe <- object$FLLinRegrStats
-          colnames(statsdataframe) <- toupper(colnames(statsdataframe))
-          dfResidualVector <- statsdataframe[["DFRESIDUAL"]]
-          object@results <- c(object@results, list(df.residual = dfResidualVector))
-          assign(parentObject, object, envir = parent.frame())
-          return(dfResidualVector)
-        }
+      if(object@vfcalls["functionName"] == "FLRobustRegr")
+      {
+        return(NULL)
+      }
+      else if(object@vfcalls["functionName"] == "FLLinRegrSP")
+      {
+        statsList <- object$regrstats
+        dfResidualList <- list(statsList$Model1$coeffframe, statsList$Model2$coeffframe)
+        object@results <- c(object@results, list(df.residual = dfResidualList))
+        assign(parentObject, object, envir = parent.frame())
+        return(dfResidualList)
+      }
+      else
+      {
+        statsdataframe <- object$FLLinRegrStats
+        colnames(statsdataframe) <- toupper(colnames(statsdataframe))
+        dfResidualVector <- statsdataframe[["DFRESIDUAL"]]
+        object@results <- c(object@results, list(df.residual = dfResidualVector))
+        assign(parentObject, object, envir = parent.frame())
+        return(dfResidualVector)
+      }
     }
     else if(property=="model")
     {
+      if(object@vfcalls[["functionName"]] == "FLLinRegrSP")
+      {
+        stop("model property not supported for MDS")
+      }
+      else
+      {
         ## The Column order may not be same as
         ## in formula object because add. columns
         ## may be added by categorical trans.
@@ -1615,17 +1631,24 @@ prepareData.character <- prepareData.formula
         ##object@results <- c(object@results,list(model=modelframe))
         assign(parentObject,object,envir=parent.frame())
         return(modelframe)
+      }
     }
     else if(property=="x")
     {
+      if(object@vfcalls[["functionName"]] == "FLLinRegrSP")
+      {
+        stop("x not supported for MD/MDS functions")
+      }
+      else
+      {
         if(!is.null(object@results[["x"]]))
-            return(object@results[["x"]])
+          return(object@results[["x"]])
 
-        modelframe <- getXMatrix(object,
-                                 pDropCols=c(-1))
-        object@results <- c(object@results,list(x=modelframe))
-        assign(parentObject,object,envir=parent.frame())
+        modelframe <- getXMatrix(object, pDropCols = c(-1))
+        object@results <- c(object@results, list(x = modelframe))
+        assign(parentObject, object, envir = parent.frame())
         return(modelframe)
+      }
     }
     else if(property=="y")
     {
@@ -1644,7 +1667,6 @@ prepareData.character <- prepareData.formula
             yvector <- list()
 
             if(object@vfcalls[["functionName"]] == "FLLinRegrSP") {
-              browser()
               newdata <- object@table
               for (i in 1:length(newdata@Dimnames[[1]][[1]])) {
                 sqlstr <- paste0("SELECT ", vgroupid, " AS vectorIdColumn,\n",
