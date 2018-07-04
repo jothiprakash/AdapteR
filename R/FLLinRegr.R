@@ -1693,7 +1693,6 @@ prepareData.character <- prepareData.formula
               }
             }
             else {
-              browser()
               sqlstr <- paste0("SELECT '%insertIDhere%' AS vectorIdColumn,\n",
                                obs_id_colname, " AS vectorIndexColumn,\n",
                                cell_val_colname, " AS vectorValueColumn\n",
@@ -2572,58 +2571,100 @@ setMethod("show","FLLinRegr",print.FLLinRegr)
 
 ## move to file lm.R
 #' @export
-plot.FLLinRegr <- function(object,method="R",limit=4000,...)
+plot.FLLinRegr <- function(object, method = "R", limit = 4000, ...)
 {
     parentObject <- unlist(strsplit(unlist(strsplit(
                         as.character(sys.call()),"(",fixed=T))[2],")",fixed=T))[1]
-    if(method=="R"){
-        vqr <- object$qr
-        vqr <- list(qr=as.matrix(vqr$qr),
-                    rank=as.integer(as.vector(vqr$rank)),
-                    qraux=as.numeric(as.vector(vqr$qraux)),
-                    pivot=as.integer(as.vector(vqr$pivot)))
+    if(method == "R"){
+      vqr <- object$qr
+      vqr <- list(qr = as.matrix(vqr$qr),
+                  rank = as.integer(as.vector(vqr$rank)),
+                  qraux = as.numeric(as.vector(vqr$qraux)),
+                  pivot = as.integer(as.vector(vqr$pivot)))
 
-        class(vqr)<-"qr"
-        reqList <- list(residuals=as.vector(object$residuals),
-                        coefficients=object$coefficients,
-                        df.residual=object$df.residual,
-                        qr=vqr,
-                        rank=vqr$rank,
-                        call=object$call,
-                        xlevels=object$xlevels,
-                        model=object$model,
-                        terms=object$terms)
-        class(reqList) <- "lm"
-        assign(parentObject,object,envir=parent.frame())
-        plot(reqList,...)
+      class(vqr) <- "qr"
+      reqList <- list(residuals = as.vector(object$residuals),
+                      coefficients = object$coefficients,
+                      df.residual = object$df.residual,
+                      qr = vqr,
+                      rank = vqr$rank,
+                      call = object$call,
+                      xlevels = object$xlevels,
+                      model = object$model,
+                      terms = object$terms)
+      class(reqList) <- "lm"
+      assign(parentObject, object, envir = parent.frame())
+      plot(reqList, ...)
     }
     else{
-        vObsIdColname <- getVariables(object@deeptable)[["obs_id_colname"]]
-        vVarIdColname <- getVariables(object@deeptable)[["var_id_colname"]]
-        vCellValColname <- getVariables(object@deeptable)[["cell_val_colname"]]
-        p <- min(limit,length(object$fitted.values))/length(object$fitted.values)
+      vObsIdColname <- getVariables(object@deeptable)[["obs_id_colname"]]
+      vVarIdColname <- getVariables(object@deeptable)[["var_id_colname"]]
+      vCellValColname <- getVariables(object@deeptable)[["cell_val_colname"]]
+      p <- min(limit,length(object$fitted.values))/length(object$fitted.values)
 
-        sqlstr <- paste0("SELECT \n ",
-                                " b.",vCellValColname," AS y, \n ",
-                                " a.y AS yhat, \n ",
-                                " (b.",vCellValColname," - a.y) AS residual \n ",
-                        " FROM ",object@scoreTable," a, \n ",
-                                getTableNameSlot(object@deeptable)," b \n ",
-                        " WHERE b.",vObsIdColname,"=a.",vObsIdColname,
-                                " AND b.",vVarIdColname,"=-1 ",
-                                " AND FLSimUniform(",
-                                    getNativeRandFunction(pArg1=1,pArg2=10000),
-                                    ", 0.0, 1.0) < ",p)
+      sqlstr <- paste0("SELECT \n ",
+                       " b.",vCellValColname," AS y, \n ",
+                       " a.y AS yhat, \n ",
+                       " (b.",vCellValColname," - a.y) AS residual \n ",
+                       " FROM ",object@scoreTable," a, \n ",
+                       getTableNameSlot(object@deeptable)," b \n ",
+                       " WHERE b.",vObsIdColname,"=a.",vObsIdColname,
+                       " AND b.",vVarIdColname,"=-1 ",
+                       " AND FLSimUniform(",
+                       getNativeRandFunction(pArg1=1,pArg2=10000),
+                       ", 0.0, 1.0) < ",p)
 
-        vdf <- sqlQuery(getFLConnection(),sqlstr)
-        vfit <- vdf[["yhat"]]
-        vresid <- vdf[["residual"]]
-        vactual <- vdf[["y"]]
-        assign(parentObject,object,envir=parent.frame())
-        plot(vfit,vresid,xlab="fitted.values",ylab="residuals",main="residual plot")
-        readline("Hit <Return> to see next plot:")
-        plot(vactual,vfit,xlab="actual values",ylab="fitted.values",main="Actual vs Fitted")
+      vdf <- sqlQuery(getFLConnection(),sqlstr)
+      vfit <- vdf[["yhat"]]
+      vresid <- vdf[["residual"]]
+      vactual <- vdf[["y"]]
+      assign(parentObject,object,envir=parent.frame())
+      plot(vfit,vresid,xlab="fitted.values",ylab="residuals",main="residual plot")
+      readline("Hit <Return> to see next plot:")
+      plot(vactual,vfit,xlab="actual values",ylab="fitted.values",main="Actual vs Fitted")
     }
+}
+
+#' @export
+plot.FLLinRegrMDS <- function(object, limit = 4000, ...)
+{
+  parentObject <- unlist(strsplit(unlist(strsplit(as.character(sys.call()),
+                                                  "(", fixed = T))[2], ")", fixed = T))[1]
+
+  for(i in 1:length(object$coefficients)) {
+    vGroudIdColname <- getVariables(object@deeptable)[["group_id_colname"]]
+    vObsIdColname <- getVariables(object@deeptable)[["obs_id_colname"]]
+    vVarIdColname <- getVariables(object@deeptable)[["var_id_colname"]]
+    vCellValColname <- getVariables(object@deeptable)[["cell_val_colname"]]
+    p <- min(limit, length(object$fitted.values[[i]])) / length(object$fitted.values[[i]])
+
+    sqlstr <- paste0("SELECT \n ",
+                     " b.", vCellValColname, " AS y, \n ",
+                     " a.y AS yhat, \n ",
+                     " (b.", vCellValColname, " - a.y) AS residual \n ",
+                     " FROM ", object@scoreTable, " a, \n ",
+                     getTableNameSlot(object@deeptable), " b \n ",
+                     " WHERE b.", vObsIdColname, " = a.", vObsIdColname,
+                     " AND a.", vGroudIdColname, " = ", i,
+                     " AND b.", vVarIdColname, " = -1 ",
+                     " AND FLSimUniform(",
+                     getNativeRandFunction(pArg1 = 1, pArg2 = 10000),
+                     ", 0.0, 1.0) < ", p)
+
+    vdf <- sqlQuery(getFLConnection(), sqlstr)
+    vfit <- vdf[["yhat"]]
+    vresid <- vdf[["residual"]]
+    vactual <- vdf[["y"]]
+    assign(parentObject, object, envir = parent.frame())
+    plot(vfit, vresid, xlab = "fitted.values", ylab = "residuals",
+         main = paste("residual plot for model ", i, sep = ""))
+    readline("Hit <Return> to see next plot:")
+    plot(vactual, vfit, xlab = "actual values", ylab = "fitted.values",
+         main = paste("Actual vs Fitted Values for model ", i, sep = ""))
+    if(i < length(object$coefficients)) {
+      readline("Hit <Return> to see next plot:")
+    }
+  }
 }
 
 ## move to file lm.R
