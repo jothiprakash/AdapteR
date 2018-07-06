@@ -2626,6 +2626,11 @@ plot.FLLinRegr <- function(object, method = "R", limit = 4000, ...)
 }
 
 #' @export
+plot.FLLinRegrMD <- function(object) {
+  warning("plot is not available for FLTableMD")
+}
+
+#' @export
 plot.FLLinRegrMDS <- function(object, limit = 4000, ...)
 {
   parentObject <- unlist(strsplit(unlist(strsplit(as.character(sys.call()),

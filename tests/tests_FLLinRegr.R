@@ -141,3 +141,6 @@ lmfitMDS$formula
 
 # MDS regrstats
 lmfitMDS$regrstats
+
+# Plot for MDS function
+plot(lmfitMDS)
