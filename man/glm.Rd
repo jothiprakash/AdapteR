@@ -27,7 +27,7 @@ the stored procedure eliminates variables based on standard deviation and
 correlation.}
 
 \item{makeDataSparse}{If 0,Retains zeroes and NULL values
-from the input table. If 1, Removes zeroes and NULL. If 2,Removes zeroes 
+from the input table. If 1, Removes zeroes and NULL. If 2,Removes zeroes
 but retains NULL values.}
 
 \item{minStdDev}{Minimum acceptable standard deviation for
@@ -47,8 +47,8 @@ parameter PerformVarReduc = 1. Must be >0 and <=1.}
 
 \item{whereconditions}{takes the where_clause as a string.}
 
-\item{pThreshold}{The threshold for False positive value 
-that a user can specify to calculate the false positives 
+\item{pThreshold}{The threshold for False positive value
+that a user can specify to calculate the false positives
 and false negatives. Must be between 0 and 1.}
 
 \item{pRefLevel}{Reference value for dependent variable

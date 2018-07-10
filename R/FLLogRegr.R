@@ -16,16 +16,18 @@ NULL
 #' @method summary FLLogRegr
 #' @method predict FLLogRegr
 #' @export
-setClass(
-	"FLLogRegr",
-	contains="FLRegr",
-	slots=list(offset="character",
-				vfcalls="character"))
+setClass("FLLogRegr",
+         contains = "FLRegr",
+         slots = list(offset = "character",
+                      vfcalls = "character"))
 
 #' @export
-setClass(
-    "FLLogRegrMD",
-    contains="FLLogRegr")
+setClass("FLLogRegrMD",
+         contains = "FLLogRegr")
+
+#' @export
+setClass("FLLogRegrMDS",
+         contains = "FLLogRegrMD")
 
 #' Logistic and Poisson Regression.
 #'
@@ -46,7 +48,7 @@ setClass(
 #' the stored procedure eliminates variables based on standard deviation and
 #' correlation.
 #' @param makeDataSparse If 0,Retains zeroes and NULL values
-#' from the input table. If 1, Removes zeroes and NULL. If 2,Removes zeroes 
+#' from the input table. If 1, Removes zeroes and NULL. If 2,Removes zeroes
 #' but retains NULL values.
 #' @param minStdDev Minimum acceptable standard deviation for
 #' elimination of variables. Any variable that has a
@@ -61,8 +63,8 @@ setClass(
 #' parameter PerformVarReduc = 1. Must be >0 and <=1.
 #' @param classSpec list describing the categorical dummy variables.
 #' @param whereconditions takes the where_clause as a string.
-#' @param pThreshold The threshold for False positive value 
-#' that a user can specify to calculate the false positives 
+#' @param pThreshold The threshold for False positive value
+#' that a user can specify to calculate the false positives
 #' and false negatives. Must be between 0 and 1.
 #' @param pRefLevel Reference value for dependent variable
 #' in case of multinomial family.
@@ -103,73 +105,79 @@ setClass(
 #' summary(glmfit)
 #' print(glmfit)
 #' @export
-glm <- function (formula,data=list(),...) {
-	UseMethod("glm", data)
- }
+glm <- function (formula, data = list(), ...) {
+  UseMethod("glm", data)
+}
 
 #' @export
 glm.default <- stats::glm
 
 #' @export
-glm.FLpreparedData <- function(formula,family="binomial",data,...)
+glm.FLpreparedData <- function(formula, family = "binomial", data, ...)
 {
-    vcallObject <- match.call()
-    if(is.character(family)){
-        if(!family%in%c("poisson","binomial","multinomial","logisticwt"))
-        stop("only poisson,binomial and multinomial are currently supported in glm\n")
-        if(family %in% "binomial") family <- "logistic"
-    }
-    if(is.function(family)){
-        if(base::identical(family,stats::poisson))
-        family <- "poisson"
-        else if(base::identical(family,stats::binomial))
-        family <- "logistic"
-        else stop("only poisson,binomial,multinomial and logisticwt families are currently supported in glm\n")
-    }
-    return(lmGeneric(formula=formula,
-                       data=data,
-                       callObject=vcallObject,
-                       familytype=family,
-                       ...))
+  vcallObject <- match.call()
+  if(is.character(family)){
+    if(!family%in%c("poisson", "binomial", "multinomial", "logisticwt"))
+      stop("only poisson,binomial and multinomial are currently supported in glm\n")
+    if (family %in% "binomial")
+      family <- "logistic"
+  }
+  if(is.function(family)){
+    if(base::identical(family, stats::poisson))
+      family <- "poisson"
+    else if (base::identical(family, stats::binomial))
+      family <- "logistic"
+    else
+      stop("only poisson,binomial,multinomial and logisticwt families are currently supported in glm\n")
+  }
+  return(lmGeneric(formula = formula,
+                   data = data,
+                   callObject = vcallObject,
+                   familytype = family,
+                   ...))
 }
 
 
 #' @export
 glm.FLTable <- function(formula,
-						family="binomial",
-						data,
-						...)
+                        family = "binomial",
+                        data,
+                        ...)
 {
 	vcallObject <- match.call()
-	data <- setAlias(data,"")
+	data <- setAlias(data, "")
 	if(is.character(family)){
-		if(!family%in%c("poisson","binomial","multinomial","logisticwt"))
-		stop("only poisson,binomial and multinomial are currently supported in glm\n")
+	  if(!family%in%c("poisson", "binomial", "multinomial", "logisticwt"))
+	    stop("only poisson,binomial and multinomial are currently supported in glm\n")
 		if(family %in% "binomial") family <- "logistic"
 	}
 	if(is.function(family)){
-		if(base::identical(family,stats::poisson))
-		family <- "poisson"
-		else if(base::identical(family,stats::binomial))
-		family <- "logistic"
-		else stop("only poisson,binomial,multinomial and logisticwt families are currently supported in glm\n")
+	  if(base::identical(family, stats::poisson))
+	    family <- "poisson"
+	  else if (base::identical(family, stats::binomial))
+	    family <- "logistic"
+	  else
+	    stop("only poisson,binomial,multinomial and logisticwt families are currently supported in glm\n")
 	}
-	return(lmGeneric(formula=formula,
-					data=data,
-					callObject=vcallObject,
-					familytype=family,
-					...))
+	return(lmGeneric(formula = formula,
+	                 data = data,
+	                 callObject = vcallObject,
+	                 familytype = family,
+	                 ...))
 }
 
 #' @export
-`$.FLLogRegr`<-function(object,property){
+glm.FLTableMDS <- glm.FLTable
+
+#' @export
+`$.FLLogRegr` <- function(object, property) {
 	#parentObject <- deparse(substitute(object))
-	parentObject <- unlist(strsplit(unlist(strsplit(
-		as.character(sys.call()),"(",fixed=T))[2],",",fixed=T))[1]
-	if(property %in% c("coefficients","residuals",
-		"fitted.values","FLCoeffStdErr",
-		"FLCoeffPValue","call","model","x",
-		"y","qr","rank","xlevels","terms","assign"))
+	parentObject <- unlist(strsplit(unlist(strsplit(as.character(sys.call()),
+	                                                "(",fixed=T))[2],",",fixed=T))[1]
+	if(property %in% c("coefficients", "residuals",
+	                   "fitted.values", "FLCoeffStdErr",
+	                   "FLCoeffPValue", "call", "model", "x",
+	                   "y", "qr", "rank", "xlevels", "terms", "assign"))
 	{
 		propertyValue <- `$.FLLinRegr`(object,property)
 		assign(parentObject,object,envir=parent.frame())
@@ -187,10 +195,11 @@ glm.FLTable <- function(formula,
 		return(object@results[["FLLogRegrStats"]])
 		else
 		{
-			sqlstr <- paste0("SELECT * FROM ",object@vfcalls["statstablename"],"\n",
-							" WHERE AnalysisID=",fquote(object@AnalysisID),
-							ifelse(!is.null(object@results[["modelID"]]),
-							paste0(" \nAND ModelID=",object@results[["modelID"]]),""))
+		  sqlstr <- paste0("SELECT * FROM ", object@vfcalls["statstablename"], "\n",
+		                   " WHERE AnalysisID=", fquote(object@AnalysisID),
+		                   ifelse(!is.null(object@results[["modelID"]]),
+		                          paste0(" \nAND ModelID=", object@results[["modelID"]]),
+		                          ""))
 
 			statsdataframe <- sqlQuery(getFLConnection(),sqlstr)
 			object@results <- c(object@results,list(FLLogRegrStats=statsdataframe))
@@ -213,6 +222,58 @@ glm.FLTable <- function(formula,
 	else stop("That's not a valid property")
 }
 
+#' @export
+`$.FLLogRegrMDS` <- function(object, property) {
+  #parentObject <- deparse(substitute(object))
+  parentObject <- unlist(strsplit(unlist(strsplit(as.character(sys.call()),
+                                                  "(",fixed=T))[2],",",fixed=T))[1]
+  if(property %in% c("coefficients", "residuals",
+                     "fitted.values", "FLCoeffStdErr",
+                     "FLCoeffPValue", "call", "model", "x",
+                     "y", "qr", "rank", "xlevels", "terms", "assign"))
+  {
+    propertyValue <- `$.FLLinRegr`(object, property)
+    assign(parentObject, object, envir = parent.frame())
+    return(propertyValue)
+  }
+  else if(property == "FLCoeffChiSq")
+  {
+    coeffVector <- coefficients.FLLogRegrMDS(object)
+    assign(parentObject, object, envir = parent.frame())
+    return(object@results[["FLCoeffChiSq"]])
+  }
+  else if(property == "FLLogRegrStats")
+  {
+    if(!is.null(object@results[["FLLogRegrStats"]]))
+      return(object@results[["FLLogRegrStats"]])
+    else
+    {
+      sqlstr <- paste0("SELECT * FROM ", object@vfcalls["statstablename"], "\n",
+                       " WHERE AnalysisID=", fquote(object@AnalysisID),
+                       ifelse(!is.null(object@results[["modelID"]]),
+                              paste0(" \nAND ModelID=", object@results[["modelID"]]),
+                              ""))
+
+      statsdataframe <- sqlQuery(getFLConnection(), sqlstr)
+      object@results <- c(object@results, list(FLLogRegrStats = statsdataframe))
+      assign(parentObject, object, envir = parent.frame())
+      return(statsdataframe)
+    }
+  }
+  else if(property == "df.residual")
+  {
+    df.residualsvector <- nrow(object@table)-length(object$coefficients)
+    assign(parentObject, object, envir = parent.frame())
+    return(df.residualsvector)
+  }
+  else if(property == "linear.predictors")
+  {
+    vlinPred <- calcLinearPred(object)
+    assign(parentObject, object, envir = parent.frame())
+    return(vlinPred)
+  }
+  else warning("That's not a valid property")
+}
 
 
 #' @export
@@ -256,7 +317,7 @@ predict.FLLogRegr <- function(object,
                               newdata=object@deeptable,
                               scoreTable="",
                               type="response"){
-    
+
 	return(predict.lmGeneric(object,newdata=newdata,
                              scoreTable=scoreTable,type=type))
 }
@@ -291,11 +352,11 @@ summary.FLLogRegr <- function(object,
                     df.null = (stat$NUMOFOBS - 1),
                     null.deviance = NA
                 )
-  
-  
+
+
     class(reqList) <- "summary.glm"
     reqList
-  
+
 }
 
 #' @export

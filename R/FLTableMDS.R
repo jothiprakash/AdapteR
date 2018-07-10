@@ -25,7 +25,7 @@ setClass("FLTableMDS.TDAster", contains = "FLTableMDS")
 #' @slot select FLTableQuery the select statement for the table.
 #' @slot dimnames the observation id and column names
 #' @slot isDeep logical (currently ignored)
-#' @slot mapSelect \code{FLSelectFrom} object which contains the 
+#' @slot mapSelect \code{FLSelectFrom} object which contains the
 #' mapping information if any
 #' @export
 setClass("FLTableMDSDeep",
@@ -72,31 +72,30 @@ setClass("FLTableMDSDeep.TDAster", contains = "FLTableMDSDeep")
 
 #' @export
 FLTableMDS <- function(table,
-                      group_id_colname,
-                      obs_id_colname,
-                      var_id_colnames=character(0), 
-                      cell_val_colname=character(0),
-                      whereconditions=character(0),
-                      connection=getFLConnection(),
-                      # group_id=c(),
-                      # fetchIDs=TRUE,
-                      dims=list(0,0,0),
-                      sparse=TRUE,
-                      dimnames=list(list(NULL),list(NULL),list(NULL)),
-                      ...
-                      ){
-        FLTableMD(table = table,
-                group_id_colname = group_id_colname,
-                obs_id_colname = obs_id_colname,
-                var_id_colnames = var_id_colnames, 
-                cell_val_colname= cell_val_colname,
-                whereconditions = whereconditions,
-                connection = getFLConnection(),
-                dims = dims,
-                sparse = sparse,
-                dimnames = dimnames,
-                MDS = TRUE,
-                ...)
+                       group_id_colname,
+                       obs_id_colname,
+                       var_id_colnames = character(0),
+                       cell_val_colname = character(0),
+                       whereconditions = character(0),
+                       connection = getFLConnection(),
+                       # group_id=c(),
+                       # fetchIDs=TRUE,
+                       dims = list(0, 0, 0),
+                       sparse = TRUE,
+                       dimnames = list(list(NULL), list(NULL), list(NULL)),
+                       ...){
+  FLTableMD(table = table,
+            group_id_colname = group_id_colname,
+            obs_id_colname = obs_id_colname,
+            var_id_colnames = var_id_colnames,
+            cell_val_colname = cell_val_colname,
+            whereconditions = whereconditions,
+            connection = getFLConnection(),
+            dims = dims,
+            sparse = sparse,
+            dimnames = dimnames,
+            MDS = TRUE,
+            ...)
 }
 
 #' @export
