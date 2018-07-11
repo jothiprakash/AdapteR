@@ -117,28 +117,28 @@ sqlSendUpdate.ODBCConnection <- function(connection, query , warn = TRUE){
 constructStoredProcArgs <- function(query,
                                     outputParameter,
                                     ...){
-    args <- list(...)
-    if("pInputParams" %in% names(args))
-        args <- args[["pInputParams"]]
-    else if(length(args)==1 && is.list(args[[1]]))
-        args <- args[[1]]
+  args <- list(...)
+  if("pInputParams" %in% names(args))
+    args <- args[["pInputParams"]]
+  else if(length(args) == 1 && is.list(args[[1]]))
+    args <- args[[1]]
 
-    ## print("stored PROC Arguments:")
-    ## print(args)
-    spMap <- getStoredProcMapping(query)
-    ## print("stored PROC Mapping:")
-    ## print(spMap)
-    if(!is.null(spMap)){
-        query <- spMap$funcNamePlatform
-        if(length(spMap$argsPlatform)>0){
-            args <- args[spMap$argsPlatform]
-            names(args) <- names(spMap$argsPlatform)
-        }
+  ## print("stored PROC Arguments:")
+  ## print(args)
+  spMap <- getStoredProcMapping(query)
+  ## print("stored PROC Mapping:")
+  ## print(spMap)
+  if(!is.null(spMap)){
+    query <- spMap$funcNamePlatform
+    if(length(spMap$argsPlatform) > 0){
+      args <- args[spMap$argsPlatform]
+      names(args) <- names(spMap$argsPlatform)
     }
-    ## print("remapped stored PROC Arguments:")
-    ## print(args)
-    return(list(args=args,
-                query=query))
+  }
+  ## print("remapped stored PROC Arguments:")
+  ## print(args)
+  return(list(args = args,
+              query = query))
 }
 
 
@@ -148,22 +148,22 @@ constructStoredProcArgs <- function(query,
 #' @param query SQLQuery to be sent
 #' @export
 sqlStoredProc <- function(connection,
-                        query,
-                        outputParameter,
-                        ...)
+                          query,
+                          outputParameter,
+                          ...)
                     UseMethod("sqlStoredProc")
 
 #' @export
 sqlStoredProc.FLConnection <- function(connection,
-                                        query,
-                                        outputParameter=NULL,
-                                        ...) {
-    if((is.TDAster(connection=connection)||is.Hadoop(connection=connection)) &&
-        class(getRConnection(connection))=="JDBCConnection")
-        class(connection$connection) <- "JDBCTDAster"
-    sqlStoredProc(connection=getRConnection(connection),
-                query=query,
-                outputParameter=outputParameter,
+                                       query,
+                                       outputParameter = NULL,
+                                       ...) {
+  if((is.TDAster(connection = connection) || is.Hadoop(connection = connection)) && class(getRConnection(connection))=="JDBCConnection")
+    class(connection$connection) <- "JDBCTDAster"
+
+  sqlStoredProc(connection = getRConnection(connection),
+                query = query,
+                outputParameter = outputParameter,
                 ...)
 }
 
@@ -172,51 +172,51 @@ sqlStoredProc.JDBCTDAster <- function(connection,
                                     query,
                                     outputParameter,
                                     ...) {
-    vlist <- constructStoredProcArgs(query=query,
-                                    outputParameter=outputParameter,
-                                    ...)
-    args <- vlist$args
-    query <- vlist$query
-    sqlstr <- do.call("constructStoredProcSQL",
-                      append(list(pConnection="string",
-                                  pFuncName=query,
-                                  pOutputParameter=outputParameter),
-                             args))
-    if(getOption("debugSQL")) {
-        cat(paste0("CALLING Stored Proc: \n",
-                   gsub(" +","    ", sqlstr),"\n"))
-    }
+  vlist <- constructStoredProcArgs(query=query,
+                                   outputParameter=outputParameter,
+                                   ...)
+  args <- vlist$args
+  query <- vlist$query
+  sqlstr <- do.call("constructStoredProcSQL",
+                    append(list(pConnection="string",
+                                pFuncName=query,
+                                pOutputParameter=outputParameter),
+                           args))
+  if(getOption("debugSQL")) {
+    cat(paste0("CALLING Stored Proc: \n",
+               gsub(" +","    ", sqlstr),"\n"))
+  }
 
-    if("returnQuery" %in% names(list(...)) && list(...)[["returnQuery"]])
-        return(sqlstr)
-    class(connection) <- "JDBCConnection"
-    retobj <- DBI::dbGetQuery(connection,sqlstr)
-    return(retobj)
+  if("returnQuery" %in% names(list(...)) && list(...)[["returnQuery"]])
+    return(sqlstr)
+  class(connection) <- "JDBCConnection"
+  retobj <- DBI::dbGetQuery(connection,sqlstr)
+  return(retobj)
 }
 
 #' @export
 sqlStoredProc.RODBC <- function(connection, query,
                                 outputParameter,
                                 ...) {
-    vlist <- constructStoredProcArgs(query=query,
-                                     outputParameter=outputParameter,
-                                     ...)
-    args <- vlist$args
-    query <- vlist$query
-    sqlstr <- do.call("constructStoredProcSQL",
-                      append(list(pConnection=connection,
-                                  pFuncName=query,
-                                  pOutputParameter=outputParameter),
-                             args))
-    if("returnQuery" %in% names(list(...)) && list(...)[["returnQuery"]])
-        return(sqlstr)
-    retobj <- sqlQuery(connection,sqlstr)
-    return(retobj)
+  vlist <- constructStoredProcArgs(query = query,
+                                   outputParameter = outputParameter,
+                                   ...)
+  args <- vlist$args
+  query <- vlist$query
+  sqlstr <- do.call("constructStoredProcSQL",
+                    append(list(pConnection = connection,
+                                pFuncName = query,
+                                pOutputParameter = outputParameter),
+                           args))
+  if("returnQuery" %in% names(list(...)) && list(...)[["returnQuery"]])
+    return(sqlstr)
+  retobj <- sqlQuery(connection, sqlstr)
+  return(retobj)
 }
+
 sqlStoredProc.ODBCConnection <- function(connection,
                                          query,
-                                         outputParameter, ...)
-{
+                                         outputParameter, ...) {
     return(sqlStoredProc.RODBC(connection, query, outputParameter, ...))
 }
 

@@ -45,7 +45,6 @@ FLTableMD <- function(table,
                       dimnames = list(list(NULL), list(NULL), list(NULL)),
                       ...)
 {
-
   # vgrp <- group_id
   vgrp <- dimnames[[1]][[1]]
   if("group_id" %in% names(list(...)))

@@ -179,17 +179,17 @@ glm.FLTableMDS <- glm.FLTable
 	                   "FLCoeffPValue", "call", "model", "x",
 	                   "y", "qr", "rank", "xlevels", "terms", "assign"))
 	{
-		propertyValue <- `$.FLLinRegr`(object,property)
-		assign(parentObject,object,envir=parent.frame())
+	  propertyValue <- `$.FLLinRegr`(object, property)
+	  assign(parentObject, object, envir = parent.frame())
 		return(propertyValue)
 	}
-	else if(property=="FLCoeffChiSq")
+	else if(property == "FLCoeffChiSq")
 	{
 		coeffVector <- coefficients.FLLogRegr(object)
-		assign(parentObject,object,envir=parent.frame())
+		assign(parentObject, object, envir = parent.frame())
 		return(object@results[["FLCoeffChiSq"]])
 	}
-	else if(property=="FLLogRegrStats")
+	else if(property == "FLLogRegrStats")
 	{
 		if(!is.null(object@results[["FLLogRegrStats"]]))
 		return(object@results[["FLLogRegrStats"]])
@@ -201,22 +201,22 @@ glm.FLTableMDS <- glm.FLTable
 		                          paste0(" \nAND ModelID=", object@results[["modelID"]]),
 		                          ""))
 
-			statsdataframe <- sqlQuery(getFLConnection(),sqlstr)
-			object@results <- c(object@results,list(FLLogRegrStats=statsdataframe))
-			assign(parentObject,object,envir=parent.frame())
+		  statsdataframe <- sqlQuery(getFLConnection(), sqlstr)
+			object@results <- c(object@results, list(FLLogRegrStats = statsdataframe))
+			assign(parentObject, object, envir = parent.frame())
 			return(statsdataframe)
 		}
 	}
-	else if(property=="df.residual")
+	else if(property == "df.residual")
 	{
-		df.residualsvector <- nrow(object@table)-length(object$coefficients)
-		assign(parentObject,object,envir=parent.frame())
+	  df.residualsvector <- nrow(object@table) - length(object$coefficients)
+	  assign(parentObject, object, envir = parent.frame())
 		return(df.residualsvector)
 	}
-	else if(property=="linear.predictors")
+	else if(property == "linear.predictors")
 	{
 		vlinPred <- calcLinearPred(object)
-		assign(parentObject,object,envir=parent.frame())
+		assign(parentObject, object, envir = parent.frame())
 		return(vlinPred)
 	}
 	else stop("That's not a valid property")
@@ -262,7 +262,7 @@ glm.FLTableMDS <- glm.FLTable
   }
   else if(property == "df.residual")
   {
-    df.residualsvector <- nrow(object@table)-length(object$coefficients)
+    df.residualsvector <- nrow(object@table) - length(object$coefficients)
     assign(parentObject, object, envir = parent.frame())
     return(df.residualsvector)
   }
@@ -286,85 +286,133 @@ setMethod("names", signature("FLLogRegr"), function(x) c("linear.predictors",
                                                           "rank","xlevels","terms","assign" ))
 
 #' @export
-coefficients.FLLogRegr<-function(object){
-	parentObject <- unlist(strsplit(unlist(strsplit(
-		as.character(sys.call()),"(",fixed=T))[2],")",fixed=T))[1]
+coefficients.FLLogRegr <- function(object){
 
-	if(is.FLTableMD(object@table))
-        coeffVector <- coefficients.FLLinRegrMD(object)
-    else
-		coeffVector <- coefficients.lmGeneric(object,
-							FLCoeffStats=c(FLCoeffStdErr="STDERR",
-							FLCoeffPValue="PVALUE",
-							FLCoeffChiSq="CHISQ"))
-	assign(parentObject,object,envir=parent.frame())
-	return(coeffVector)
+  parentObject <- unlist(strsplit(unlist(strsplit(as.character(sys.call()),
+                                                  "(", fixed = T))[2], ")", fixed = T))[1]
+
+  if(is.FLTableMD(object@table))
+    coeffVector <- coefficients.FLLinRegrMD(object)
+  else
+    coeffVector <- coefficients.lmGeneric(object,
+                                          FLCoeffStats = c(FLCoeffStdErr = "STDERR",
+                                                           FLCoeffPValue = "PVALUE",
+                                                           FLCoeffChiSq = "CHISQ"))
+  assign(parentObject, object, envir = parent.frame())
+  return(coeffVector)
 }
 
 #' @export
-residuals.FLLogRegr<-function(object)
+residuals.FLLogRegr <- function(object)
 {
-	parentObject <- unlist(strsplit(unlist(strsplit(
-		as.character(sys.call()),"(",fixed=T))[2],")",fixed=T))[1]
-	residualsvector <- calcResiduals(object,"working")
-	object@results <- c(object@results,list(residuals=residualsvector))
-	assign(parentObject,object,envir=parent.frame())
+	parentObject <- unlist(strsplit(unlist(strsplit(as.character(sys.call()),
+	                                                "(",fixed=T))[2],")",fixed=T))[1]
+	residualsvector <- calcResiduals(object, "working")
+	object@results <- c(object@results, list(residuals = residualsvector))
+	assign(parentObject, object, envir = parent.frame())
 	return(residualsvector)
 }
 
 #' @export
 predict.FLLogRegr <- function(object,
-                              newdata=object@deeptable,
-                              scoreTable="",
-                              type="response"){
+                              newdata = object@deeptable,
+                              scoreTable = "",
+                              type = "response"){
 
-	return(predict.lmGeneric(object,newdata=newdata,
-                             scoreTable=scoreTable,type=type))
+  return(predict.lmGeneric(object, newdata = newdata,
+                           scoreTable = scoreTable, type = type))
 }
 
 #' @export
 summary.FLLogRegr <- function(object,
-                              calcResiduals=FALSE){
-    stat <- object$FLLogRegrStats
-    colnames(stat) <- toupper(colnames(stat))
-  	coeffframe <- data.frame(object$coefficients,
-							object$FLCoeffStdErr,
-							object$FLCoeffChiSq,
-							object$FLCoeffPValue)
-	colnames(coeffframe)<-c("Estimate","Std. Error","ChiSquare","Pr(>|t|)")
+                              calcResiduals = FALSE) {
+
+  stat <- object$FLLogRegrStats
+  colnames(stat) <- toupper(colnames(stat))
+  coeffframe <- data.frame(object$coefficients,
+                           object$FLCoeffStdErr,
+                           object$FLCoeffChiSq,
+                           object$FLCoeffPValue)
+  colnames(coeffframe)<-c("Estimate", "Std. Error", "ChiSquare", "Pr(>|t|)")
   #put rowname
-    # rname <- all.vars(object@formula)
-    # rownames(coeffframe) <- c(rownames(coeffframe)[1], rname[2:length(rname)])
-    rownames(coeffframe) <- names(object$coefficients)
+  # rname <- all.vars(object@formula)
+  # rownames(coeffframe) <- c(rownames(coeffframe)[1], rname[2:length(rname)])
+  rownames(coeffframe) <- names(object$coefficients)
 
-    if(calcResiduals)
-        vresiduals <- as.vector(object$residuals)
-    else vresiduals <- NA
+  if(calcResiduals)
+    vresiduals <- as.vector(object$residuals)
+  else vresiduals <- NA
 
-    reqList <- list(call = as.call(object@formula),
-                    deviance.resid  = vresiduals,
-                    coefficients = as.matrix(coeffframe),
-                    df = as.vector(c((stat$NUMOFOBS + 1),(stat$NUMOFOBS-1-stat$NUMOFVARS), (stat$NUMOFOBS + 1))),
-                    aliased = FALSE,
-                    dispersion = 1,
-                    df.residual = (stat$NUMOFOBS-1-stat$NUMOFVARS),
-                    iter = stat$ITERATIONS,
-                    df.null = (stat$NUMOFOBS - 1),
-                    null.deviance = NA
-                )
+  reqList <- list(call = as.call(object@formula),
+                  deviance.resid  = vresiduals,
+                  coefficients = as.matrix(coeffframe),
+                  df = as.vector(c((stat$NUMOFOBS + 1),
+                                   (stat$NUMOFOBS - 1 - stat$NUMOFVARS),
+                                   (stat$NUMOFOBS + 1))),
+                  aliased = FALSE,
+                  dispersion = 1,
+                  df.residual = (stat$NUMOFOBS - 1 - stat$NUMOFVARS),
+                  iter = stat$ITERATIONS,
+                  df.null = (stat$NUMOFOBS - 1),
+                  null.deviance = NA)
 
 
-    class(reqList) <- "summary.glm"
-    reqList
+  class(reqList) <- "summary.glm"
+  reqList
+}
+
+#' @export
+summary.FLLogRegrMDS <- function(object,
+                              calcResiduals = FALSE){
+  stat <- object$FLLogRegrStats
+  colnames(stat) <- toupper(colnames(stat))
+  coeffframe <- data.frame(object$coefficients,
+                           object$FLCoeffStdErr,
+                           object$FLCoeffChiSq,
+                           object$FLCoeffPValue)
+  colnames(coeffframe)<-c("Estimate", "Std. Error", "ChiSquare", "Pr(>|t|)")
+  #put rowname
+  # rname <- all.vars(object@formula)
+  # rownames(coeffframe) <- c(rownames(coeffframe)[1], rname[2:length(rname)])
+  rownames(coeffframe) <- names(object$coefficients)
+
+  if(calcResiduals)
+    vresiduals <- as.vector(object$residuals)
+  else vresiduals <- NA
+
+  reqList <- list(call = as.call(object@formula),
+                  deviance.resid  = vresiduals,
+                  coefficients = as.matrix(coeffframe),
+                  df = as.vector(c((stat$NUMOFOBS + 1),
+                                   (stat$NUMOFOBS - 1 - stat$NUMOFVARS),
+                                   (stat$NUMOFOBS + 1))),
+                  aliased = FALSE,
+                  dispersion = 1,
+                  df.residual = (stat$NUMOFOBS - 1 - stat$NUMOFVARS),
+                  iter = stat$ITERATIONS,
+                  df.null = (stat$NUMOFOBS - 1),
+                  null.deviance = NA)
+
+
+  class(reqList) <- "summary.glm"
+  reqList
 
 }
 
 #' @export
-print.FLLogRegr<-function(object){
+print.FLLogRegr <- function(object){
 	parentObject <- unlist(strsplit(unlist(strsplit(
 		as.character(sys.call()),"(",fixed=T))[2],")",fixed=T))[1]
 	print.FLLinRegr(object)
-	assign(parentObject,object,envir=parent.frame())
+	assign(parentObject, object, envir = parent.frame())
+}
+
+#' @export
+print.FLLogRegrMDS <- function(object) {
+  parentObject <- unlist(strsplit(unlist(strsplit(
+    as.character(sys.call()),"(",fixed=T))[2],")",fixed=T))[1]
+  print.FLLinRegr(object)
+  assign(parentObject, object, envir = parent.frame())
 }
 
 #' @export
