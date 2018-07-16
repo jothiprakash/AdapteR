@@ -12,4 +12,4 @@ deeptableMDS <- FLTableMDS(getTestTableName("tblLogRegrMulti"),
                            var_id_colnames = "VARID",
                            cell_val_colname = "NUM_VAL")
 
-glmfitMDS <- glm(NULL, data = deeptableMD)
+glmfitMDS <- glm(NULL, data = deeptableMDS)

@@ -147,7 +147,7 @@ glm.FLTable <- function(formula,
 	vcallObject <- match.call()
 	data <- setAlias(data, "")
 	if(is.character(family)){
-	  if(!family%in%c("poisson", "binomial", "multinomial", "logisticwt"))
+	  if(!family %in% c("poisson", "binomial", "multinomial", "logisticwt"))
 	    stop("only poisson,binomial and multinomial are currently supported in glm\n")
 		if(family %in% "binomial") family <- "logistic"
 	}
@@ -298,6 +298,20 @@ coefficients.FLLogRegr <- function(object){
                                           FLCoeffStats = c(FLCoeffStdErr = "STDERR",
                                                            FLCoeffPValue = "PVALUE",
                                                            FLCoeffChiSq = "CHISQ"))
+  assign(parentObject, object, envir = parent.frame())
+  return(coeffVector)
+}
+
+#' @export
+coefficients.FLLogRegrMDS <- function(object){
+  parentObject <- unlist(strsplit(unlist(strsplit(as.character(sys.call()),
+                                                  "(", fixed = T))[2], ")", fixed = T))[1]
+
+  coeffVector <- coefficients.lmGeneric(object,
+                                        FLCoeffStats = c(FLCoeffStdErr = "STDERR",
+                                                         FLCoeffPValue = "PVALUE",
+                                                         FLCoeffChiSq = "CHISQ"))
+
   assign(parentObject, object, envir = parent.frame())
   return(coeffVector)
 }
