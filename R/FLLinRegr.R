@@ -2249,25 +2249,40 @@ coefficients.lmGeneric <-function(object,
     vcolnames <- colnames(object@deeptable)
     droppedCols <- vcolnames[!vcolnames %in% c("-1", coeffVector[[vID]])]
 
-    browser()
     # Loop to structure the FLCoeffStats and coeffVector1
     if(vfcalls[["functionName"]] == "FLLogRegrMDS" || vfcalls[["functionName"]] == "FLLogRegrSP") {
       tempFLCoeffStats <- list()
 
       for(i in 1:length(FLCoeffStats)) {
         CoeffStats <- list()
+        tdatasetCount <- datasetCount
         count <- 1
-        for(j in 1:length(datasetCount)) {
-          splitVector <- count:datasetCount[[j]]
+        for(j in 1:length(tdatasetCount)) {
+          splitVector <- count:tdatasetCount[[j]]
           CoeffStats[[j]] <- FLCoeffStats[[i]][splitVector]
-          count <- datasetCount[[j]] + 1
-          if(j < length(datasetCount)) {
-            datasetCount[[j + 1]] <- datasetCount[[j]] + datasetCount[[j + 1]]
+          count <- tdatasetCount[[j]] + 1
+          if(j < length(tdatasetCount)) {
+            tdatasetCount[[j + 1]] <- tdatasetCount[[j]] + datasetCount[[j + 1]]
           }
         }
         tempFLCoeffStats[[i]] <- CoeffStats
       }
-      tempFLCoeffStats <- tempFLCoeffStats[!is.na(tempFLCoeffStats)]
+      FLCoeffStatsNames <- names(FLCoeffStats)
+      FLCoeffStats <- tempFLCoeffStats
+      names(FLCoeffStats) <- FLCoeffStatsNames
+
+      tdatasetCount <- datasetCount
+      CoeffVector_1 <- list()
+      count <- 1
+      for(j in 1:length(tdatasetCount)) {
+        splitVector <- count:tdatasetCount[[j]]
+        CoeffVector_1[[j]] <- coeffVector1[splitVector]
+        count <- tdatasetCount[[j]] + 1
+        if(j < length(tdatasetCount)) {
+          tdatasetCount[[j + 1]] <- tdatasetCount[[j]] + datasetCount[[j + 1]]
+        }
+      }
+      coeffVector1 <- CoeffVector_1
     }
 
     # FLCoeffStats <- lapply(tempFLCoeffStats,
