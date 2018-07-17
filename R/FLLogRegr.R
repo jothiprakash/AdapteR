@@ -328,6 +328,17 @@ residuals.FLLogRegr <- function(object)
 }
 
 #' @export
+residuals.FLLogRegrMDS <- function(object)
+{
+  parentObject <- unlist(strsplit(unlist(strsplit(as.character(sys.call()),
+                                                  "(", fixed = T))[2], ")", fixed = T))[1]
+  residualsList <- calcResiduals(object, "working")
+  object@results <- c(object@results, list(residuals = residualsList))
+  assign(parentObject, object, envir = parent.frame())
+  return(residualsList)
+}
+
+#' @export
 predict.FLLogRegr <- function(object,
                               newdata = object@deeptable,
                               scoreTable = "",

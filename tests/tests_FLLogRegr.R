@@ -13,3 +13,6 @@ deeptableMDS <- FLTableMDS(getTestTableName("tblLogRegrMulti"),
                            cell_val_colname = "NUM_VAL")
 
 glmfitMDS <- glm(NULL, data = deeptableMDS)
+
+# MDS coefficients
+glmfitMDS$coefficients

@@ -449,10 +449,12 @@ calcResiduals <- function(object,
   vtype <- match.arg(type)
   vfit <- object$fitted.values
   vYVector <- object$y
+  browser()
   if(vtype=="partial")
     stop("partial type is not supported currently \n ")
-  if(object@vfcalls["functionName"]=="FLLinRegr"
-    || vtype=="response"|| object@vfcalls["functionName"] =="FLRobustRegr"||object@vfcalls["functionName"] =="FLPLSRegr"){
+
+  if(object@vfcalls["functionName"] == "FLLinRegr" || vtype == "response" ||
+     object@vfcalls["functionName"] == "FLRobustRegr" || object@vfcalls["functionName"] == "FLPLSRegr"){
     sqlstr <- paste0("SELECT '%insertIDhere%' AS vectorIdColumn, \n ",
                                 "a.vectorIndexColumn AS vectorIndexColumn, \n ",
                                 "(a.vectorValueColumn-b.vectorValueColumn)",
@@ -461,6 +463,7 @@ calcResiduals <- function(object,
                             "(",constructSelect(vfit),") b \n ",
                       " WHERE a.vectorIndexColumn=b.vectorIndexColumn ")
   }
+
   else if(object@vfcalls["functionName"] == "FLLinRegrSP") {
     sqlstr <- list()
     for (i in 1:length(object@table@Dimnames[[1]][[1]])) {
@@ -475,8 +478,9 @@ calcResiduals <- function(object,
       sqlstr <- c(sqlstr, newsqlstr)
     }
   }
-  else if(object@vfcalls["functionName"]%in%c("FLLogRegr","FLLogRegrWt")){
-    if(type=="deviance")
+
+  else if(object@vfcalls["functionName"] %in% c("FLLogRegr", "FLLogRegrWt")){
+    if(type == "deviance")
       sqlstr <- paste0("SELECT '%insertIDhere%' AS vectorIdColumn, \n ",
                                 "a.vectorIndexColumn AS vectorIndexColumn, \n ",
                                 "CASE WHEN (a.vectorValueColumn<>1) THEN \n ",
@@ -485,7 +489,8 @@ calcResiduals <- function(object,
                       " FROM(",constructSelect(vYVector),") a, \n ",
                             "(",constructSelect(vfit),") b \n ",
                       " WHERE a.vectorIndexColumn=b.vectorIndexColumn ")
-    else if(type=="pearson")
+
+    else if(type == "pearson")
       sqlstr <- paste0("SELECT '%insertIDhere%' AS vectorIdColumn, \n ",
                                 "a.vectorIndexColumn AS vectorIndexColumn, \n ",
                                 "(a.vectorValueColumn-b.vectorValueColumn)/",
@@ -494,7 +499,8 @@ calcResiduals <- function(object,
                       " FROM(",constructSelect(vYVector),") a, \n ",
                             "(",constructSelect(vfit),") b \n ",
                       " WHERE a.vectorIndexColumn=b.vectorIndexColumn ")
-    else if(type=="working")
+
+    else if(type == "working")
       sqlstr <- paste0("SELECT '%insertIDhere%' AS vectorIdColumn, \n ",
                                 "a.vectorIndexColumn AS vectorIndexColumn, \n ",
                                 "(a.vectorValueColumn-b.vectorValueColumn)/",
@@ -504,8 +510,24 @@ calcResiduals <- function(object,
                             "(",constructSelect(vfit),") b \n ",
                       " WHERE a.vectorIndexColumn=b.vectorIndexColumn ")
   }
-  else if(object@vfcalls["functionName"]=="FLPoissonRegr"){
-    if(type=="deviance")
+
+  else if(object@vfcalls["functionName"] == "FLLogRegrMDS" || object@vfcalls["functionName"] == "FLLogRegrSP") {
+    sqlstr <- list()
+    for (i in 1:length(object@table@Dimnames[[1]][[1]])) {
+      newsqlstr <- paste0("SELECT b.vectorIdColumn AS vectorIdColumn, \n ",
+                          "a.vectorIndexColumn AS vectorIndexColumn, \n ",
+                          "(a.vectorValueColumn - b.vectorValueColumn)",
+                          " AS vectorValueColumn \n ",
+                          " FROM(", constructSelect(vYVector[[i]]), ") a, \n ",
+                          "(", constructSelect(vfit[[i]]), ") b \n ",
+                          " WHERE a.vectorIndexColumn = b.vectorIndexColumn ",
+                          " AND a.vectorIdColumn = b.vectorIdColumn")
+      sqlstr <- c(sqlstr, newsqlstr)
+    }
+  }
+
+  else if(object@vfcalls["functionName"] == "FLPoissonRegr"){
+    if(type == "deviance")
       sqlstr <- paste0("SELECT '%insertIDhere%' AS vectorIdColumn, \n ",
                                 "a.vectorIndexColumn AS vectorIndexColumn, \n ",
                                 "CASE WHEN (a.vectorValueColumn==0) THEN \n ",
@@ -517,7 +539,8 @@ calcResiduals <- function(object,
                       " FROM(",constructSelect(vYVector),") a, \n ",
                             "(",constructSelect(vfit),") b \n ",
                       " WHERE a.vectorIndexColumn=b.vectorIndexColumn ")
-    else if(type=="pearson")
+
+    else if(type == "pearson")
       sqlstr <- paste0("SELECT '%insertIDhere%' AS vectorIdColumn, \n ",
                                 "a.vectorIndexColumn AS vectorIndexColumn, \n ",
                                 "(a.vectorValueColumn-b.vectorValueColumn)/",
@@ -525,7 +548,8 @@ calcResiduals <- function(object,
                       " FROM(",constructSelect(vYVector),") a, \n ",
                             "(",constructSelect(vfit),") b \n ",
                       " WHERE a.vectorIndexColumn=b.vectorIndexColumn ")
-    else if(type=="working")
+
+    else if(type == "working")
       sqlstr <- paste0("SELECT '%insertIDhere%' AS vectorIdColumn, \n ",
                                 "a.vectorIndexColumn AS vectorIndexColumn, \n ",
                                 "(a.vectorValueColumn-b.vectorValueColumn)/",
